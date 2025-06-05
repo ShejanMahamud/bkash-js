@@ -36,7 +36,7 @@
     "payment-processing",
     "payment-verification"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "Shejan Mahamud <dev.shejanmahamud@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^29.5.0",
@@ -63,21 +63,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/example/bkash-nagad-payment.git"
+    "url": "https://github.com/ShejanMahamud/bkash-nagad-payment.git"
   },
   "bugs": {
-    "url": "https://github.com/example/bkash-nagad-payment/issues"
+    "url": "https://github.com/ShejanMahamud/bkash-nagad-payment/issues"
   },
-  "homepage": "https://github.com/example/bkash-nagad-payment#readme",
+  "homepage": "https://github.com/ShejanMahamud/bkash-nagad-payment#readme",
   "publishConfig": {
     "access": "public"
   },
   "funding": {
     "type": "github",
-    "url": "https://github.com/sponsors/yourusername"
+    "url": "https://github.com/sponsors/ShejanMahamud"
   },
   "contributors": [
-    "Your Name <your.email@example.com>"
+    "Shejan Mahamud <dev.shejanmahamud@gmail.com>"
   ],
   "private": false
 }
