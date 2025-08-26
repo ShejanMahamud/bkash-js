@@ -1,7 +1,7 @@
 {
-  "name": "bkash-nagad-payment",
-  "version": "1.0.0",
-  "description": "A production-grade Node.js package for integrating bKash and Nagad payment gateways with TypeScript support, webhook handling, and comprehensive error management",
+  "name": "bkash-js",
+  "version": "1.0.1",
+  "description": "A production-ready Node.js package for bKash Checkout (URL Based) payment integration with TypeScript support, webhook handling, and comprehensive error management",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -16,25 +16,26 @@
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "test:coverage": "jest --coverage",
-    "prepublishOnly": "npm run lint && npm run test && npm run build",
+    "prepublishOnly": "npm run lint && npm run test && npm run build && npm run validate",
     "clean": "rimraf dist",
-    "prebuild": "npm run clean"
+    "prebuild": "npm run clean",
+    "validate": "node scripts/validate-package.js"
   },
   "keywords": [
     "bkash",
-    "nagad",
+    "bkash-checkout",
+    "bkash-payment",
     "payment",
-    "integration",
     "bangladesh",
     "mobile-banking",
     "payment-gateway",
     "typescript",
     "webhook",
-    "refund",
-    "transaction",
+    "checkout",
+    "url-based",
     "merchant",
     "payment-processing",
-    "payment-verification"
+    "payment-integration"
   ],
   "author": "Shejan Mahamud <dev.shejanmahamud@gmail.com>",
   "license": "MIT",
@@ -63,12 +64,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ShejanMahamud/bkash-nagad-payment.git"
+    "url": "https://github.com/ShejanMahamud/bkash-js.git"
   },
   "bugs": {
-    "url": "https://github.com/ShejanMahamud/bkash-nagad-payment/issues"
+    "url": "https://github.com/ShejanMahamud/bkash-js/issues"
   },
-  "homepage": "https://github.com/ShejanMahamud/bkash-nagad-payment#readme",
+  "homepage": "https://github.com/ShejanMahamud/bkash-js#readme",
   "publishConfig": {
     "access": "public"
   },

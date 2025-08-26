@@ -1,219 +1,229 @@
-# bKash & Nagad Payment Integration
+# bKash Payment Integration
 
-A production-grade Node.js package for integrating bKash and Nagad payment gateways with TypeScript support, webhook handling, and comprehensive error management.
+[![npm version](https://img.shields.io/npm/v/bkash-js.svg)](https://www.npmjs.com/package/bkash-js)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+A TypeScript library for bKash Checkout (URL Based) payment integration in Node.js applications.
 
-- **Dual Payment Gateway Support**: Seamlessly integrate both bKash and Nagad payment gateways
-- **TypeScript Support**: Built with TypeScript for better type safety and developer experience
-- **Webhook Integration**: Real-time payment notifications with secure signature verification
-- **Comprehensive Error Handling**: Detailed error messages and proper error types
-- **Logging**: Built-in logging with Winston
-- **Input Validation**: Request payload validation using Zod
-- **Testing**: Comprehensive test coverage with Jest
-- **Production Ready**: Battle-tested in production environments
+## What This Package Covers
+
+- **Payment Flow**: Create payments, execute after user completion, verify status
+- **Refund System**: Process refunds and check refund status (v2 API support)
+- **Transaction Management**: Search transactions and check status
+- **Webhook Integration**: Handle payment notifications with signature verification
+- **Token Management**: Automatic authentication token handling
+- **TypeScript Support**: Full type definitions for better development experience
 
 ## Installation
 
 ```bash
-npm install bkash-nagad-payment
+npm install bkash-js
 ```
 
-## Usage
-
-### bKash Integration
-
-#### Configuration
+## Quick Start
 
 ```typescript
-import { BkashPayment } from 'bkash-nagad-payment';
+import { BkashJS } from 'bkash-js';
 
-const bkash = new BkashPayment({
-  appKey: 'your-app-key',
-  appSecret: 'your-app-secret',
-  username: 'your-username',
-  password: 'your-password',
-  sandbox: true, // Set to false for production
-  webhook: {
-    secret: 'your-webhook-secret', // Optional: For webhook signature verification
-  },
+const bkash = new BkashJS({
+  appKey: 'your_app_key',
+  appSecret: 'your_app_secret',
+  username: 'your_username',
+  password: 'your_password',
+  isSandbox: true
 });
-```
 
-#### Payment Flow
-
-1. **Create Payment**:
-
-```typescript
+// Create payment
 const payment = await bkash.createPayment({
   amount: 100,
-  currency: 'BDT',
-  merchantInvoiceNumber: 'INV-123',
-  intent: 'sale',
+  orderId: 'ORDER-001',
+  intent: 'sale'
 });
+
+// Execute payment after user completes on bKash
+const executed = await bkash.executePayment(payment.paymentID);
 ```
 
-2. **Execute Payment**:
+## Available Methods
+
+### Payment Operations
+- `createPayment()` - Create a new payment
+- `executePayment()` - Execute payment after user completion  
+- `verifyPayment()` - Verify payment status
+- `queryPayment()` - Get detailed payment information
+
+### Refund Operations
+- `refundPayment()` - Process refunds (v2 API)
+- `checkRefundStatus()` - Check refund status
+- `refundPaymentLegacy()` - Legacy refund format
+
+### Transaction Operations
+- `searchTransaction()` - Search transactions
+- `checkTransactionStatus()` - Check transaction status
+
+### Token & Webhook
+- `grantToken()` - Get access token
+- `refreshToken()` - Refresh expired token
+- `handleWebhook()` - Process webhook notifications
+- `verifyWebhookSignature()` - Verify webhook signatures
+
+## Configuration
 
 ```typescript
-const result = await bkash.executePayment(payment.paymentID);
+interface BkashConfig {
+  appKey: string;
+  appSecret: string;
+  username: string;
+  password: string;
+  isSandbox?: boolean;
+  successUrl?: string;
+  failureUrl?: string;
+  cancelUrl?: string;
+  requestTimeout?: number;
+}
 ```
 
-3. **Query Payment**:
+## Basic Example
 
 ```typescript
-const status = await bkash.queryPayment(payment.paymentID);
-```
+// Express.js integration
+app.post('/create-payment', async (req, res) => {
+  try {
+    const payment = await bkash.createPayment({
+      amount: req.body.amount,
+      orderId: req.body.orderId,
+      intent: 'sale'
+    });
+    
+    res.json({ paymentUrl: payment.paymentURL });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
-4. **Refund Payment**:
+// Handle success callback
+app.get('/payment/success', async (req, res) => {
+  try {
+    const executed = await bkash.executePayment(req.query.paymentId);
+    if (executed.transactionStatus === 'Completed') {
+      // Payment successful
+      res.redirect('/success');
+    }
+  } catch (error) {
+    res.redirect('/error');
+  }
+});
 
-```typescript
+// Process refund
 const refund = await bkash.refundPayment({
-  paymentID: 'payment-id',
-  amount: 100,
-  reason: 'Customer request',
-  sku: 'SKU-123',
+  paymentId: 'payment_id',
+  trxId: 'transaction_id',
+  refundAmount: '100.00',
+  sku: 'PRODUCT-001',
+  reason: 'Customer request'
 });
 ```
 
-5. **Webhook Handling**:
+## Event Handling
 
 ```typescript
-// In your Express.js route handler
-app.post('/webhook/bkash', async (req, res) => {
-  try {
-    const signature = req.headers['x-bkash-signature'];
-    await bkash.handleWebhook(req.body, signature);
-    res.status(200).send('Webhook processed');
-  } catch (error) {
-    res.status(400).send(error.message);
-  }
+bkash.on('payment.executed', (data) => {
+  console.log('Payment successful:', data.trxID);
 });
 
-// Listen for payment events
-bkash.on('bkash:event', (event) => {
-  console.log('Received bKash event:', event);
-});
-```
-
-### Nagad Integration
-
-#### Configuration
-
-```typescript
-import { NagadPayment } from 'bkash-nagad-payment';
-
-const nagad = new NagadPayment({
-  merchantId: 'your-merchant-id',
-  merchantNumber: 'your-merchant-number',
-  callbackUrl: 'https://your-domain.com/callback',
-  sandbox: true, // Set to false for production
-  webhook: {
-    secret: 'your-webhook-secret', // Optional: For webhook signature verification
-  },
-});
-```
-
-#### Payment Flow
-
-1. **Initialize Payment**:
-
-```typescript
-const payment = await nagad.initializePayment({
-  amount: 100,
-  currency: 'BDT',
-  merchantOrderId: 'ORD-123',
-  customerMsisdn: '8801XXXXXXXXX', // Optional: Customer's mobile number
-});
-```
-
-2. **Verify Payment**:
-
-```typescript
-const result = await nagad.verifyPayment(payment.paymentReferenceId);
-```
-
-3. **Query Payment Status**:
-
-```typescript
-const status = await nagad.queryPayment(payment.paymentReferenceId);
-```
-
-4. **Refund Payment**:
-
-```typescript
-const refund = await nagad.refundPayment({
-  paymentReferenceId: 'payment-ref-id',
-  amount: 100,
-  reason: 'Customer request',
-  merchantOrderId: 'ORD-123',
-});
-```
-
-5. **Webhook Handling**:
-
-```typescript
-// In your Express.js route handler
-app.post('/webhook/nagad', async (req, res) => {
-  try {
-    const signature = req.headers['x-nagad-signature'];
-    await nagad.handleWebhook(req.body, signature);
-    res.status(200).send('Webhook processed');
-  } catch (error) {
-    res.status(400).send(error.message);
-  }
+bkash.on('refund.processed', (data) => {
+  console.log('Refund processed:', data.refundTrxId);
 });
 
-// Listen for payment events
-nagad.on('nagad:event', (event) => {
-  console.log('Received Nagad event:', event);
+bkash.on('webhook.received', (data) => {
+  console.log('Webhook notification:', data);
 });
 ```
 
 ## Error Handling
 
-Both bKash and Nagad integrations use custom error classes for better error handling:
-
 ```typescript
 try {
-  await payment.execute();
+  const payment = await bkash.createPayment(data);
 } catch (error) {
-  if (error instanceof BkashError) {
-    // Handle bKash specific errors
-    console.error(error.code, error.message);
-  } else if (error instanceof NagadError) {
-    // Handle Nagad specific errors
-    console.error(error.code, error.message);
+  if (error.code === '2068') {
+    console.log('Payment expired');
+  } else if (error.code === '2006') {
+    console.log('Payment cancelled');
   }
 }
 ```
 
-## Webhook Integration
-
-Both bKash and Nagad support webhook integration for real-time payment notifications. Configure the webhook secret and handler in the respective payment client. Use the `handleWebhook` and `verifyWebhookSignature` methods for secure processing.
-
-### Security Note
-
-Webhook signature verification uses HMAC-SHA256 and `crypto.timingSafeEqual` for robust security. **If no secret is configured, signature verification is skipped and the event is still emitted.** If the secret is set and the signature is invalid or the buffer lengths do not match, the verification will fail gracefully and the handler will throw a custom error (`Invalid webhook signature`).
-
-## Testing
-
-```bash
-# Run tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Installation
+
+```bash
+npm install bkash-js
+```
+
+## Quick Start
+
+```typescript
+import { BkashJS } from 'bkash-js';
+
+const bkash = new BkashJS({
+  appKey: 'your_app_key',
+  appSecret: 'your_app_secret',
+  username: 'your_username',
+  password: 'your_password',
+  isSandbox: true
+});
+
+// Create payment
+const payment = await bkash.createPayment({
+  amount: 100,
+  orderId: 'ORDER-001',
+  intent: 'sale'
+});
+
+// Execute payment after user completes on bKash
+const executed = await bkash.executePayment(payment.paymentID);
+```
+
+## Available Methods
+
+### Payment Operations
+- `createPayment()` - Create a new payment
+- `executePayment()` - Execute payment after user completion  
+- `verifyPayment()` - Verify payment status
+- `queryPayment()` - Get detailed payment information
+
+### Refund Operations
+- `refundPayment()` - Process refunds (v2 API)
+- `checkRefundStatus()` - Check refund status
+- `refundPaymentLegacy()` - Legacy refund format
+
+### Transaction Operations
+- `searchTransaction()` - Search transactions
+- `checkTransactionStatus()` - Check transaction status
+
+### Token & Webhook
+- `grantToken()` - Get access token
+- `refreshToken()` - Refresh expired token
+- `handleWebhook()` - Process webhook notifications
+- `verifyWebhookSignature()` - Verify webhook signatures
+
+## Configuration
+
+```typescript
+interface BkashConfig {
+  appKey: string;
+  appSecret: string;
+  username: string;
+  password: string;
+  isSandbox?: boolean;
+  successUrl?: string;
+  failureUrl?: string;
+  cancelUrl?: string;
+  requestTimeout?: number;
+}
+```
