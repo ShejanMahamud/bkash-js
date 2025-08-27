@@ -13,6 +13,7 @@ export class AxiosHttpClient implements IHttpClient {
             ? 'https://tokenized.sandbox.bka.sh/v1.2.0-beta'
             : 'https://tokenized.pay.bka.sh/v1.2.0-beta';
 
+
         this.client = axios.create({
             baseURL,
             headers: {

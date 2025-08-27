@@ -6,42 +6,41 @@
 
 A Node.js/TypeScript library for bKash Checkout (URL Based) payment integration with advanced features including retry mechanisms, event handling, webhook support, and complete transaction lifecycle management.
 
-## 🚀 What This Package Covers
+## What This Package Covers
 
 ### Core Payment Features
-- **🏷️ Payment Creation**: Create secure checkout payments with bKash URL-based integration
-- **✅ Payment Execution**: Execute payments after customer authorization through bKash app/USSD
-- **🔍 Payment Verification**: Verify payment status and retrieve transaction details
-- **📊 Payment Queries**: Query payment status with detailed transaction information
-- **🔄 Transaction Status Checking**: Real-time transaction status monitoring
+- **Payment Creation**: Create secure checkout payments with bKash URL-based integration
+- **Payment Execution**: Execute payments after customer authorization through bKash app/USSD
+- **Payment Verification**: Verify payment status and retrieve transaction details
+- **Payment Queries**: Query payment status with detailed transaction information
+- **Transaction Status Checking**: Real-time transaction status monitoring
 
 ### Advanced Refund System (v2 API)
-- **💰 Full & Partial Refunds**: Process complete or partial refunds (up to 10 partial refunds per transaction)
-- **📋 Refund Status Tracking**: Check refund transaction status and history
-- **🏷️ SKU & Reason Tracking**: Track refunds with product information and reasons
-- **🔄 Legacy Refund Support**: Backward compatibility with older refund implementations
+- **Full & Partial Refunds**: Process complete or partial refunds (up to 10 partial refunds per transaction)
+- **Refund Status Tracking**: Check refund transaction status and history
+- **SKU & Reason Tracking**: Track refunds with product information and reasons
 
 ### Transaction Management
-- **🔍 Transaction Search**: Search transactions by bKash transaction ID with comprehensive details
-- **📈 Transaction History**: Access customer details, timing information, and transaction lifecycle
-- **🏢 Organization Data**: Retrieve merchant and organization information
-- **📱 Customer Information**: Access customer MSISDN and transaction references
+- **Transaction Search**: Search transactions by bKash transaction ID with comprehensive details
+- **Transaction History**: Access customer details, timing information, and transaction lifecycle
+- **Organization Data**: Retrieve merchant and organization information
+- **Customer Information**: Access customer MSISDN and transaction references
 
 ### Security & Authentication
-- **🔐 Automatic Token Management**: Smart token caching, renewal, and refresh handling
-- **🛡️ Webhook Security**: HMAC SHA256 signature verification for webhook authenticity
-- **🔒 Secure API Calls**: Built-in request/response validation and error handling
-- **⚡ Retry Mechanisms**: Automatic retry for failed operations with configurable delays
+- **Automatic Token Management**: Smart token caching, renewal, and refresh handling
+- **Webhook Security**: HMAC SHA256 signature verification for webhook authenticity
+- **Secure API Calls**: Built-in request/response validation and error handling
+- **Retry Mechanisms**: Automatic retry for failed operations with configurable delays
 
 ### Developer Experience
-- **📘 Full TypeScript Support**: Complete type definitions and IntelliSense support
-- **🎯 Event-Driven Architecture**: Real-time event emissions for payment lifecycle
-- **📝 Comprehensive Logging**: Detailed logging with configurable levels using Winston
-- **🔧 Validation**: Zod schema validation for all inputs and outputs
-- **🏗️ Express.js Integration**: Ready-to-use examples and middleware support
-- **🧪 Test Coverage**: Comprehensive Jest test suite with 95%+ coverage
+- **Full TypeScript Support**: Complete type definitions and IntelliSense support
+- **Event-Driven Architecture**: Real-time event emissions for payment lifecycle
+- **Comprehensive Logging**: Detailed logging with configurable levels using Winston
+- **Validation**: Zod schema validation for all inputs and outputs
+- **Express.js Integration**: Ready-to-use examples and middleware support
+- **Test Coverage**: Comprehensive Jest test suite with 95%+ coverage
 
-## 🛠️ Installation
+## Installation
 
 ```bash
 npm install bkash-js
@@ -51,7 +50,7 @@ yarn add bkash-js
 pnpm add bkash-js
 ```
 
-## ⚙️ Configuration Options
+## Configuration Options
 
 ```typescript
 interface BkashConfig {
@@ -77,7 +76,7 @@ interface BkashConfig {
 }
 ```
 
-## ⚡ Quick Start
+## Quick Start
 
 ```typescript
 import { BkashPayment } from 'bkash-js'; // Uses the refactored SOLID architecture
@@ -110,7 +109,7 @@ const payment = await bkash.createPayment({
 // Execute payment after customer authorization
 const executed = await bkash.executePayment(payment.paymentID);
 ```
-## 🔧 Advanced Usage - Individual Services
+## Advanced Usage - Individual Services
 
 For advanced use cases, you can use individual services with dependency injection:
 
@@ -140,7 +139,7 @@ class CustomTokenManager implements ITokenManager {
 }
 ```
 
-## 🎯 Event-Driven Architecture
+## Event-Driven Architecture
 
 Listen to real-time payment events for better integration:
 
@@ -183,9 +182,9 @@ bkash.on('bkash:event', (event) => {
 });
 ```
 
-## 📚 API Documentation
+## API Documentation
 
-### 🏷️ Payment Operations
+### Payment Operations
 
 #### `createPayment(data: PaymentData)` 
 Creates a new checkout payment request with complete API response.
@@ -255,15 +254,15 @@ if (status.transactionStatus === 'Completed') {
 }
 ```
 
-#### `verifyPayment(transactionId: string)`
+#### `verifyPayment(paymentId: string)`
 Verifies payment completion and retrieves verification details.
 
 ```typescript
-const verification = await bkash.verifyPayment(transactionId);
+const verification = await bkash.verifyPayment(paymentId);
 console.log('Verification status:', verification.status);
 ```
 
-### 💰 Advanced Refund System (v2 API)
+### Advanced Refund System (v2 API)
 
 #### `refundPayment(data: RefundData)`
 Process full or partial refunds with enhanced tracking (supports up to 10 partial refunds).
@@ -340,23 +339,7 @@ if (result.transactionReference) {
 }
 ```
 
-#### `checkTransactionStatus(transactionId: string)`
-Get current transaction status with utility methods.
-
-```typescript
-const status = await bkash.checkTransactionStatus('TXN123456');
-
-// Use built-in utility methods
-if (bkash.isTransactionSuccessful(status)) {
-  console.log('✅ Transaction completed successfully');
-} else if (bkash.isTransactionPending(status)) {
-  console.log('⏳ Transaction is still pending');
-} else if (bkash.isTransactionFailed(status)) {
-  console.log('❌ Transaction failed');
-}
-```
-
-### 🔐 Advanced Authentication & Token Management
+### Advanced Authentication & Token Management
 
 #### `grantToken()`
 Get new access token with complete response details.
@@ -552,22 +535,22 @@ npm run format
 ### Reporting Issues
 Please use the [GitHub Issues](https://github.com/ShejanMahamud/bkash-js/issues) page to report bugs or request features.
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [bKash Limited](https://www.bkash.com/) for providing the payment gateway API
 - The Node.js and TypeScript communities for excellent tooling
 - All contributors who help improve this package
 
-## 📞 Support
+## Support
 
-- 📧 Email: [dev.shejanmahamud@gmail.com](mailto:dev.shejanmahamud@gmail.com)
-- 🐛 Issues: [GitHub Issues](https://github.com/ShejanMahamud/bkash-js/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/ShejanMahamud/bkash-js/discussions)
-- 📚 Documentation: [API Reference](https://github.com/ShejanMahamud/bkash-js#readme)
+- Email: [dev.shejanmahamud@gmail.com](mailto:dev.shejanmahamud@gmail.com)
+- Issues: [GitHub Issues](https://github.com/ShejanMahamud/bkash-js/issues)
+- Discussions: [GitHub Discussions](https://github.com/ShejanMahamud/bkash-js/discussions)
+- Documentation: [API Reference](https://github.com/ShejanMahamud/bkash-js#readme)
 
 ---
 

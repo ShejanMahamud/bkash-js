@@ -4,14 +4,12 @@ import { IRefundService, ITokenManager } from '../interfaces/services';
 import {
     BkashConfig,
     BkashError,
-    LegacyRefundData,
-    LegacyRefundResponse,
     RefundData,
     RefundResponse,
     RefundStatusRequest,
-    RefundStatusResponse,
+    RefundStatusResponse
 } from '../types/types';
-import { LegacyRefundDataSchema, RefundDataSchema, RefundStatusRequestSchema } from '../validation/schemas';
+import { RefundDataSchema, RefundStatusRequestSchema } from '../validation/schemas';
 
 /**
  * Refund operations service
@@ -54,6 +52,7 @@ export class RefundService implements IRefundService {
                             Authorization: token,
                             'X-App-Key': this.config.appKey,
                         },
+                        baseURL: 'https://tokenized.pay.bka.sh'
                     }
                 );
 
@@ -88,38 +87,6 @@ export class RefundService implements IRefundService {
     }
 
     /**
-     * Process a payment refund (Legacy Method)
-     * @deprecated Use refundPayment() instead
-     */
-    async refundPaymentLegacy(refundData: LegacyRefundData): Promise<LegacyRefundResponse> {
-        // Validate legacy refund data
-        LegacyRefundDataSchema.parse(refundData);
-
-        // Convert legacy format to new format
-        const newRefundData: RefundData = {
-            paymentId: refundData.paymentId,
-            trxId: refundData.transactionId,
-            refundAmount: refundData.amount.toString(),
-            sku: 'LEGACY',
-            reason: refundData.reason || 'Customer request',
-        };
-
-        const result = await this.refundPayment(newRefundData);
-
-        // Convert new response format to legacy format
-        return {
-            statusCode: result.refundTransactionStatus === 'Completed' ? '0000' : '0001',
-            statusMessage: result.refundTransactionStatus === 'Completed' ? 'Successful' : 'Failed',
-            paymentID: refundData.paymentId,
-            trxID: result.originalTrxId,
-            amount: result.refundAmount,
-            currency: result.currency,
-            refundTrxID: result.refundTrxId,
-            completedTime: result.completedTime,
-        };
-    }
-
-    /**
      * Check the status of a refunded transaction
      */
     async checkRefundStatus(refundStatusData: RefundStatusRequest): Promise<RefundStatusResponse> {
@@ -141,6 +108,7 @@ export class RefundService implements IRefundService {
                             Authorization: token,
                             'X-App-Key': this.config.appKey,
                         },
+                        baseURL: 'https://tokenized.pay.bka.sh'
                     }
                 );
 

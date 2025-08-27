@@ -4,12 +4,10 @@ import { ITokenManager, ITransactionService } from '../interfaces/services';
 import {
     BkashConfig,
     BkashError,
-    LegacySearchTransactionResponse,
     QueryPaymentRequest,
     QueryPaymentResponse,
     SearchTransactionData,
-    SearchTransactionResponse,
-    TransactionStatus,
+    SearchTransactionResponse
 } from '../types/types';
 import { SearchTransactionSchema, TransactionIdSchema } from '../validation/schemas';
 
@@ -74,41 +72,6 @@ export class TransactionService implements ITransactionService {
     }
 
     /**
-     * Check the status of a transaction
-     */
-    async checkTransactionStatus(transactionId: string): Promise<TransactionStatus> {
-        return this.retryService.retryOperation(async () => {
-            try {
-                // Validate transaction ID
-                TransactionIdSchema.parse(transactionId);
-
-                this.logger.info('Checking transaction status', { transactionId });
-                const token = await this.tokenManager.getToken();
-
-                const response = await this.httpClient.get<TransactionStatus>(
-                    `/tokenized/checkout/transaction/status/${transactionId}`,
-                    {
-                        headers: {
-                            Authorization: token,
-                            'x-app-key': this.config.appKey,
-                        },
-                    }
-                );
-
-                this.logger.info('Transaction status retrieved successfully', { transactionId });
-                return response.data;
-            } catch (error) {
-                this.logger.error('Failed to check transaction status', { error, transactionId });
-                throw new BkashError(
-                    'Failed to check transaction status',
-                    'TRANSACTION_STATUS_ERROR',
-                    error instanceof AxiosError ? error.response?.data : error
-                );
-            }
-        });
-    }
-
-    /**
      * Search for transaction details by transaction ID
      */
     async searchTransaction(searchData: SearchTransactionData): Promise<SearchTransactionResponse> {
@@ -150,26 +113,5 @@ export class TransactionService implements ITransactionService {
                 );
             }
         });
-    }
-
-    /**
-     * Search transaction by transaction ID (Legacy Method)
-     * @deprecated Use searchTransaction() instead
-     */
-    async searchTransactionLegacy(transactionId: string): Promise<LegacySearchTransactionResponse> {
-        const result = await this.searchTransaction({ trxID: transactionId });
-
-        // Convert new response format to legacy format for backward compatibility
-        return {
-            statusCode: result.statusCode,
-            statusMessage: result.statusMessage,
-            paymentID: '', // Not available in new API response
-            trxID: result.trxID,
-            amount: result.amount,
-            currency: result.currency,
-            transactionStatus: result.transactionStatus,
-            paymentExecuteTime: result.completedTime,
-            merchantInvoiceNumber: '', // Not available in new API response
-        };
     }
 }

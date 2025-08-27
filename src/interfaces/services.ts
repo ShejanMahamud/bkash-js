@@ -3,11 +3,7 @@ import {
     CreatePaymentResponse,
     ExecutePaymentResponse,
     GrantTokenResponse,
-    LegacyRefundData,
-    LegacyRefundResponse,
-    LegacySearchTransactionResponse,
     PaymentData,
-    PaymentResponse,
     QueryPaymentResponse,
     RefreshTokenResponse,
     RefundData,
@@ -35,8 +31,7 @@ export interface ITokenManager {
  * Payment operations interface
  */
 export interface IPaymentService {
-    createPayment(paymentData: PaymentData): Promise<PaymentResponse>;
-    createPaymentFull(paymentData: PaymentData): Promise<CreatePaymentResponse>;
+    createPayment(paymentData: PaymentData): Promise<CreatePaymentResponse>;
     executePayment(paymentID: string): Promise<ExecutePaymentResponse>;
     verifyPayment(transactionId: string): Promise<VerificationResponse>;
 }
@@ -46,9 +41,7 @@ export interface IPaymentService {
  */
 export interface ITransactionService {
     queryPayment(paymentID: string): Promise<QueryPaymentResponse>;
-    checkTransactionStatus(transactionId: string): Promise<TransactionStatus>;
     searchTransaction(searchData: SearchTransactionData): Promise<SearchTransactionResponse>;
-    searchTransactionLegacy(transactionId: string): Promise<LegacySearchTransactionResponse>;
 }
 
 /**
@@ -56,7 +49,6 @@ export interface ITransactionService {
  */
 export interface IRefundService {
     refundPayment(refundData: RefundData): Promise<RefundResponse>;
-    refundPaymentLegacy(refundData: LegacyRefundData): Promise<LegacyRefundResponse>;
     checkRefundStatus(refundStatusData: RefundStatusRequest): Promise<RefundStatusResponse>;
 }
 

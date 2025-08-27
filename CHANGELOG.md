@@ -14,12 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Full Payment API**: New `createPaymentFull()` method returning complete API response
 - **Query Payment API**: New `queryPayment()` method for detailed payment status checking
 - **Advanced Search**: New `searchTransaction()` method with modern API endpoint support
-- **Legacy Compatibility**: Backward compatibility methods for existing integrations
-  - `refundPaymentLegacy()` - Legacy refund format support
-  - `searchTransactionLegacy()` - Legacy search format support
 - **Enhanced TypeScript Support**: Comprehensive type definitions for all APIs
   - `RefundStatusRequest` and `RefundStatusResponse` interfaces
-  - `RefundData` and `LegacyRefundData` interfaces
+  - `RefundData` interfaces
   - `CreatePaymentResponse` and `QueryPaymentResponse` interfaces
   - `GrantTokenResponse` and `RefreshTokenResponse` interfaces
 - **Event System Enhancements**: New event types for better integration
@@ -48,7 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Input Validation**: Enhanced Zod schemas for all API endpoints
   - `RefundStatusRequestSchema` for refund status validation
   - `RefundDataSchema` with proper amount format validation
-  - `LegacyRefundDataSchema` for backward compatibility
 - **Error Handling**: Improved error messages and error codes mapping
   - Specific error handling for refund API error codes (2071-2082)
   - Better timeout and retry error handling
@@ -176,15 +172,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 3. **Refund API**:
    ```typescript
-   // v1.x
-   await bkash.refundPayment({
-     paymentId: 'PAY123',
-     transactionId: 'TXN456',
-     amount: 100,
-     reason: 'Refund'
-   });
-   
-   // v2.x (Recommended)
    await bkash.refundPayment({
      paymentId: 'PAY123',
      trxId: 'TXN456', // Changed field name
@@ -193,13 +180,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
      reason: 'Refund'
    });
    
-   // v2.x (Legacy compatibility)
-   await bkash.refundPaymentLegacy({
-     paymentId: 'PAY123',
-     transactionId: 'TXN456', // Old field name still works
-     amount: 100, // Number format still works
-     reason: 'Refund'
-   });
    ```
 
 #### New Features Available
@@ -248,7 +228,6 @@ New event types available:
    ```
 
 3. **Test Refund Integration**:
-   - Use `refundPaymentLegacy()` for immediate compatibility
    - Migrate to `refundPayment()` for enhanced features
    - Add `checkRefundStatus()` for better refund tracking
 

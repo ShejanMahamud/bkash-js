@@ -4,7 +4,7 @@ tests/
 __tests__/
 *.test.ts
 *.spec.ts
-
+bkash.ts
 # Development files
 .git/
 .github/

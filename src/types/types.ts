@@ -196,25 +196,6 @@ export interface RefundResponse {
   reason: string;
 }
 
-// Keep the old interface for backward compatibility
-export interface LegacyRefundData {
-  paymentId: string;
-  transactionId: string;
-  amount: number;
-  reason?: string;
-}
-
-export interface LegacyRefundResponse {
-  statusCode: string;
-  statusMessage: string;
-  paymentID: string;
-  trxID: string;
-  amount: string;
-  currency: string;
-  refundTrxID: string;
-  completedTime: string;
-}
-
 // Refund Status API Types
 export interface RefundStatusRequest {
   paymentId: string;
@@ -259,20 +240,7 @@ export interface SearchTransactionResponse {
   organizationShortCode: string;
   initiationTime: string;
   completedTime: string;
-  transactionReference?: string; // Optional field
-}
-
-// Keep the old interface for backward compatibility
-export interface LegacySearchTransactionResponse {
-  statusCode: string;
-  statusMessage: string;
-  paymentID: string;
-  trxID: string;
-  amount: string;
-  currency: string;
-  transactionStatus: string;
-  paymentExecuteTime: string;
-  merchantInvoiceNumber: string;
+  transactionReference?: string;
 }
 
 // Search Transaction Error Response

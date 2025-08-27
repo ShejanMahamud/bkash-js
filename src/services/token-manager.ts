@@ -52,7 +52,6 @@ export class TokenManager implements ITokenManager {
                         },
                     }
                 );
-
                 const tokenData = response.data;
                 if (!tokenData.id_token) {
                     throw new BkashError('No token received from bKash', 'TOKEN_ERROR');

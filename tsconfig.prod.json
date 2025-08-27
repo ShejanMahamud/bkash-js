@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "dist",
+    "examples", 
+    "**/*.test.ts",
+    "src/bkash.ts",
+    "src/__tests__/**/*"
+  ]
+}

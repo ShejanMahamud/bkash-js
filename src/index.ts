@@ -1,6 +1,5 @@
 // Export bKash payment classes
-export { BkashPayment as BkashPaymentLegacy } from './bkash'; // Original implementation (for backward compatibility)
-export { BkashPayment } from './bkash-refactored'; // Refactored SOLID implementation (default)
+export { BkashPayment } from './bkash'; // Refactored SOLID implementation (default)
 
 // Export bKash types and interfaces
 export * from './types/types';

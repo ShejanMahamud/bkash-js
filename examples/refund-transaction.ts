@@ -33,40 +33,6 @@ async function refundTransactionExample() {
         console.log('- Completed Time:', refundResult.completedTime);
         console.log('- Original Transaction ID:', refundResult.originalTrxId);
 
-        // Method 2: Legacy Refund API - For backward compatibility
-        console.log('\n=== Refund Transaction Example (Legacy API) ===');
-
-        const legacyRefundData = {
-            paymentId: 'TR001',
-            transactionId: 'BFD90JRLST',
-            amount: 25.50, // Amount as number
-            reason: 'Customer requested refund',
-        };
-
-        const legacyRefundResult = await bkash.refundPaymentLegacy(legacyRefundData);
-
-        console.log('Legacy Refund Response:');
-        console.log('- Status Code:', legacyRefundResult.statusCode);
-        console.log('- Status Message:', legacyRefundResult.statusMessage);
-        console.log('- Payment ID:', legacyRefundResult.paymentID);
-        console.log('- Transaction ID:', legacyRefundResult.trxID);
-        console.log('- Refund Transaction ID:', legacyRefundResult.refundTrxID);
-        console.log('- Amount:', legacyRefundResult.amount);
-        console.log('- Currency:', legacyRefundResult.currency);
-
-        // Partial Refund Example
-        console.log('\n=== Partial Refund Example ===');
-
-        const partialRefund = {
-            paymentId: 'TR002',
-            trxId: 'BFD90JKLMN',
-            refundAmount: '10.00', // Partial amount
-            sku: 'SERVICE-001',
-            reason: 'Partial service cancellation',
-        };
-
-        const partialRefundResult = await bkash.refundPayment(partialRefund);
-        console.log('Partial refund processed:', partialRefundResult.refundTrxId);
 
         // Multiple Partial Refunds
         console.log('\n=== Multiple Partial Refunds Example ===');

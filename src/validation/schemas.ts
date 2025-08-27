@@ -31,19 +31,13 @@ export const PaymentDataSchema = z.object({
 });
 
 export const TransactionIdSchema = z.string().min(1, 'Transaction ID is required');
+export const PaymentIdSchema = z.string().min(1, 'Payment ID is required');
 
 export const RefundDataSchema = z.object({
   paymentId: z.string().min(1, 'Payment ID is required'),
   trxId: z.string().min(1, 'Transaction ID is required'),
   refundAmount: z.string().min(1, 'Refund amount is required').regex(/^\d+(\.\d{1,2})?$/, 'Invalid amount format (e.g., "100.00")'),
   sku: z.string().min(1, 'SKU is required'),
-  reason: z.string().optional(),
-});
-
-export const LegacyRefundDataSchema = z.object({
-  paymentId: z.string().min(1, 'Payment ID is required'),
-  transactionId: z.string().min(1, 'Transaction ID is required'),
-  amount: z.number().positive('Amount must be positive'),
   reason: z.string().optional(),
 });
 

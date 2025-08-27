@@ -7,10 +7,9 @@ import {
     CreatePaymentResponse,
     ExecutePaymentResponse,
     PaymentData,
-    PaymentResponse,
-    VerificationResponse,
+    VerificationResponse
 } from '../types/types';
-import { PaymentDataSchema, TransactionIdSchema } from '../validation/schemas';
+import { PaymentDataSchema, PaymentIdSchema, TransactionIdSchema } from '../validation/schemas';
 
 /**
  * Payment operations service
@@ -26,91 +25,9 @@ export class PaymentService implements IPaymentService {
     ) { }
 
     /**
-     * Create a new payment request
-     */
-    async createPayment(paymentData: PaymentData): Promise<PaymentResponse> {
-        return this.retryService.retryOperation(async () => {
-            try {
-                // Validate payment data
-                PaymentDataSchema.parse(paymentData);
-
-                this.logger.info('Creating payment', { paymentData });
-                const token = await this.tokenManager.getToken();
-
-                // Prepare request payload according to API specification
-                const requestPayload = {
-                    mode: paymentData.mode || '0011',
-                    payerReference: paymentData.payerReference,
-                    callbackURL: paymentData.callbackURL,
-                    amount: paymentData.amount,
-                    currency: paymentData.currency,
-                    intent: paymentData.intent,
-                    merchantInvoiceNumber: paymentData.merchantInvoiceNumber,
-                    ...(paymentData.merchantAssociationInfo && {
-                        merchantAssociationInfo: paymentData.merchantAssociationInfo
-                    })
-                };
-
-                const response = await this.httpClient.post<CreatePaymentResponse>(
-                    '/tokenized/checkout/create',
-                    requestPayload,
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Accept: 'application/json',
-                            Authorization: token,
-                            'X-App-Key': this.config.appKey,
-                        },
-                    }
-                );
-
-                this.logger.info('Payment created successfully', {
-                    paymentId: response.data.paymentID,
-                    transactionStatus: response.data.transactionStatus,
-                    statusCode: response.data.statusCode
-                });
-
-                // Convert CreatePaymentResponse to PaymentResponse for backward compatibility
-                const paymentResponse: PaymentResponse = {
-                    paymentID: response.data.paymentID,
-                    bkashURL: response.data.bkashURL,
-                    statusCode: response.data.statusCode,
-                    statusMessage: response.data.statusMessage,
-                    amount: response.data.amount,
-                    currency: response.data.currency,
-                    intent: response.data.intent,
-                    merchantInvoiceNumber: response.data.merchantInvoiceNumber,
-                    paymentCreateTime: response.data.paymentCreateTime,
-                    transactionStatus: response.data.transactionStatus,
-                    callbackURL: response.data.callbackURL,
-                    successCallbackURL: response.data.successCallbackURL,
-                    failureCallbackURL: response.data.failureCallbackURL,
-                    cancelledCallbackURL: response.data.cancelledCallbackURL,
-                    payerReference: paymentData.payerReference,
-                };
-
-                this.eventEmitter.emit('bkash:event', {
-                    type: 'payment.created',
-                    data: paymentResponse,
-                    timestamp: new Date(),
-                });
-
-                return paymentResponse;
-            } catch (error) {
-                this.logger.error('Failed to create payment', { error, paymentData });
-                throw new BkashError(
-                    'Failed to create payment',
-                    'PAYMENT_CREATE_ERROR',
-                    error instanceof AxiosError ? error.response?.data : error
-                );
-            }
-        });
-    }
-
-    /**
      * Create Payment (Full Response) - Create a new payment with complete API response
      */
-    async createPaymentFull(paymentData: PaymentData): Promise<CreatePaymentResponse> {
+    async createPayment(paymentData: PaymentData): Promise<CreatePaymentResponse> {
         return this.retryService.retryOperation(async () => {
             try {
                 // Validate payment data
@@ -227,18 +144,18 @@ export class PaymentService implements IPaymentService {
     /**
      * Verify a payment transaction
      */
-    async verifyPayment(transactionId: string): Promise<VerificationResponse> {
+    async verifyPayment(paymentId: string): Promise<VerificationResponse> {
         return this.retryService.retryOperation(async () => {
             try {
-                // Validate transaction ID
-                TransactionIdSchema.parse(transactionId);
+                // Validate payment ID
+                PaymentIdSchema.parse(paymentId);
 
-                this.logger.info('Verifying payment', { transactionId });
+                this.logger.info('Verifying payment', { paymentId });
                 const token = await this.tokenManager.getToken();
 
                 const response = await this.httpClient.post<VerificationResponse>(
                     '/tokenized/checkout/execute',
-                    { paymentID: transactionId },
+                    { paymentID: paymentId },
                     {
                         headers: {
                             Authorization: token,
@@ -247,7 +164,7 @@ export class PaymentService implements IPaymentService {
                     }
                 );
 
-                this.logger.info('Payment verified successfully', { transactionId });
+                this.logger.info('Payment verified successfully', { paymentId });
                 this.eventEmitter.emit('bkash:event', {
                     type: 'payment.success',
                     data: response.data,
@@ -256,7 +173,7 @@ export class PaymentService implements IPaymentService {
 
                 return response.data;
             } catch (error) {
-                this.logger.error('Failed to verify payment', { error, transactionId });
+                this.logger.error('Failed to verify payment', { error, paymentId });
                 this.eventEmitter.emit('bkash:event', {
                     type: 'payment.failed',
                     data: error instanceof AxiosError ? error.response?.data : error,
