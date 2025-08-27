@@ -4,7 +4,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comprehensive Node.js/TypeScript library for bKash Checkout (URL Based) payment integration with advanced features including retry mechanisms, event handling, webhook support, and complete transaction lifecycle management.
+A Node.js/TypeScript library for bKash Checkout (URL Based) payment integration with advanced features including retry mechanisms, event handling, webhook support, and complete transaction lifecycle management.
 
 ## 🚀 What This Package Covers
 
@@ -51,6 +51,32 @@ yarn add bkash-js
 pnpm add bkash-js
 ```
 
+## ⚙️ Configuration Options
+
+```typescript
+interface BkashConfig {
+  // Required Authentication
+  username: string;           // bKash merchant username
+  password: string;           // bKash merchant password
+  appKey: string;            // bKash application key
+  appSecret: string;         // bKash application secret
+  
+  // Environment & Behavior
+  isSandbox?: boolean;       // Default: false (production)
+  timeout?: number;          // Request timeout in ms (default: 30000)
+  maxRetries?: number;       // Max retry attempts (default: 3)
+  retryDelay?: number;       // Delay between retries in ms (default: 1000)
+  log?: boolean;             // Enable detailed logging (default: false)
+  
+  // Advanced Webhook Configuration
+  webhook?: {
+    secret: string;          // Webhook signature verification secret
+    path?: string;           // Webhook endpoint path
+    onEvent?: (event: BkashEvent) => Promise<void>; // Custom event handler
+  };
+}
+```
+
 ## ⚡ Quick Start
 
 ```typescript
@@ -84,13 +110,76 @@ const payment = await bkash.createPayment({
 // Execute payment after customer authorization
 const executed = await bkash.executePayment(payment.paymentID);
 
-// Listen to real-time events
+## 🎯 Event-Driven Architecture
+
+Listen to real-time payment events for better integration:
+
+```typescript
+// Listen to all bKash events
 bkash.on('bkash:event', (event) => {
-  console.log(`Event: ${event.type}`, event.data);
+  console.log(`Event Type: ${event.type}`);
+  console.log('Event Data:', event.data);
+  console.log('Timestamp:', event.timestamp);
+});
+
+// Available event types:
+// - payment.created      - Payment request created
+// - payment.success      - Payment executed successfully
+// - payment.failed       - Payment execution failed
+// - payment.cancelled    - Payment cancelled by user
+// - refund.success       - Refund processed successfully
+// - refund.failed        - Refund processing failed
+// - refund.status.checked - Refund status retrieved
+// - refund.status.failed  - Refund status check failed
+
+// Handle specific events
+bkash.on('bkash:event', (event) => {
+  switch (event.type) {
+    case 'payment.success':
+      console.log('✅ Payment completed:', event.data.trxID);
+      // Update database, send notifications, etc.
+      break;
+      
+    case 'payment.failed':
+      console.log('❌ Payment failed:', event.data.statusMessage);
+      // Handle failed payment, retry logic, etc.
+      break;
+      
+    case 'refund.success':
+      console.log('💰 Refund processed:', event.data.refundTrxId);
+      // Update order status, notify customer, etc.
+      break;
+  }
 });
 ```
 
-## 📚 Comprehensive API Documentation
+## ⚙️ Configuration Options
+
+```typescript
+interface BkashConfig {
+  // Required Authentication
+  username: string;           // bKash merchant username
+  password: string;           // bKash merchant password
+  appKey: string;            // bKash application key
+  appSecret: string;         // bKash application secret
+  
+  // Environment & Behavior
+  isSandbox?: boolean;       // Default: false (production)
+  timeout?: number;          // Request timeout in ms (default: 30000)
+  maxRetries?: number;       // Max retry attempts (default: 3)
+  retryDelay?: number;       // Delay between retries in ms (default: 1000)
+  log?: boolean;             // Enable detailed logging (default: false)
+  
+  // Advanced Webhook Configuration
+  webhook?: {
+    secret: string;          // Webhook signature verification secret
+    path?: string;           // Webhook endpoint path
+    onEvent?: (event: BkashEvent) => Promise<void>; // Custom event handler
+  };
+}
+```
+
+## 📚 API Documentation
 
 ### 🏷️ Payment Operations
 
@@ -334,76 +423,62 @@ const webhookEvent = bkash.createWebhookEvent('payment.success', {
 await bkash.handleWebhook(webhookEvent);
 ```
 
-## ⚙️ Configuration Options
+## 📊 API Response Examples
 
-```typescript
-interface BkashConfig {
-  // Required Authentication
-  username: string;           // bKash merchant username
-  password: string;           // bKash merchant password
-  appKey: string;            // bKash application key
-  appSecret: string;         // bKash application secret
-  
-  // Environment & Behavior
-  isSandbox?: boolean;       // Default: false (production)
-  timeout?: number;          // Request timeout in ms (default: 30000)
-  maxRetries?: number;       // Max retry attempts (default: 3)
-  retryDelay?: number;       // Delay between retries in ms (default: 1000)
-  log?: boolean;             // Enable detailed logging (default: false)
-  
-  // Advanced Webhook Configuration
-  webhook?: {
-    secret: string;          // Webhook signature verification secret
-    path?: string;           // Webhook endpoint path
-    onEvent?: (event: BkashEvent) => Promise<void>; // Custom event handler
-  };
+### Create Payment Response
+```json
+{
+  "paymentID": "TR0001xt7mXxG1718274354990",
+  "paymentCreateTime": "2024-06-13T12:32:35:033 GMT+0600",
+  "transactionStatus": "Initiated",
+  "amount": "100.50",
+  "currency": "BDT",
+  "intent": "sale",
+  "merchantInvoiceNumber": "INV-1718274354990",
+  "bkashURL": "https://checkout.sandbox.bka.sh/v1.2.0-beta/checkout/payment/create/TR0001xt7mXxG1718274354990",
+  "callbackURL": "https://yoursite.com/callback",
+  "successCallbackURL": "https://checkout.sandbox.bka.sh/v1.2.0-beta/checkout/payment/callback/success/TR0001xt7mXxG1718274354990",
+  "failureCallbackURL": "https://checkout.sandbox.bka.sh/v1.2.0-beta/checkout/payment/callback/failure/TR0001xt7mXxG1718274354990",
+  "cancelledCallbackURL": "https://checkout.sandbox.bka.sh/v1.2.0-beta/checkout/payment/callback/cancel/TR0001xt7mXxG1718274354990",
+  "statusCode": "0000",
+  "statusMessage": "Successful"
 }
 ```
 
-## 🎯 Event-Driven Architecture
-
-Listen to real-time payment events for better integration:
-
-```typescript
-// Listen to all bKash events
-bkash.on('bkash:event', (event) => {
-  console.log(`Event Type: ${event.type}`);
-  console.log('Event Data:', event.data);
-  console.log('Timestamp:', event.timestamp);
-});
-
-// Available event types:
-// - payment.created      - Payment request created
-// - payment.success      - Payment executed successfully
-// - payment.failed       - Payment execution failed
-// - payment.cancelled    - Payment cancelled by user
-// - refund.success       - Refund processed successfully
-// - refund.failed        - Refund processing failed
-// - refund.status.checked - Refund status retrieved
-// - refund.status.failed  - Refund status check failed
-
-// Handle specific events
-bkash.on('bkash:event', (event) => {
-  switch (event.type) {
-    case 'payment.success':
-      console.log('✅ Payment completed:', event.data.trxID);
-      // Update database, send notifications, etc.
-      break;
-      
-    case 'payment.failed':
-      console.log('❌ Payment failed:', event.data.statusMessage);
-      // Handle failed payment, retry logic, etc.
-      break;
-      
-    case 'refund.success':
-      console.log('💰 Refund processed:', event.data.refundTrxId);
-      // Update order status, notify customer, etc.
-      break;
-  }
-});
+### Execute Payment Response
+```json
+{
+  "paymentID": "TR0001xt7mXxG1718274354990",
+  "statusCode": "0000",
+  "statusMessage": "Successful",
+  "customerMsisdn": "01712345678",
+  "payerReference": "01712345678",
+  "paymentExecuteTime": "2024-06-13T12:35:42:127 GMT+0600",
+  "trxID": "BFD90JRLST",
+  "transactionStatus": "Completed",
+  "amount": "100.50",
+  "currency": "BDT",
+  "intent": "sale",
+  "merchantInvoiceNumber": "INV-1718274354990"
+}
 ```
 
-## 🏗️ Complete Express.js Integration Example
+### Refund Response
+```json
+{
+  "originalTrxId": "BFD90JRLST",
+  "refundTrxId": "BFE91KSMTU",
+  "refundTransactionStatus": "Completed",
+  "originalTrxAmount": "100.50",
+  "refundAmount": "50.25",
+  "currency": "BDT",
+  "completedTime": "2024-06-13T13:15:28:456 GMT+0600",
+  "sku": "PRODUCT-SKU-001",
+  "reason": "Customer requested partial refund"
+}
+```
+
+## 🏗️ Express.js Integration Example
 
 ```typescript
 import express from 'express';
@@ -607,9 +682,7 @@ app.listen(3000, () => {
 });
 ```
 
-## 🚨 Error Handling & Best Practices
-
-### Comprehensive Error Handling
+## 🚨 Error Handling
 
 ```typescript
 import { BkashError } from 'bkash-js';
@@ -646,112 +719,6 @@ try {
   }
 }
 ```
-
-### Security Best Practices
-
-```typescript
-// 1. Always use environment variables for sensitive data
-const bkash = new BkashPayment({
-  appKey: process.env.BKASH_APP_KEY!,
-  appSecret: process.env.BKASH_APP_SECRET!,
-  username: process.env.BKASH_USERNAME!,
-  password: process.env.BKASH_PASSWORD!,
-  webhook: {
-    secret: process.env.BKASH_WEBHOOK_SECRET!
-  }
-});
-
-// 2. Always verify webhook signatures
-app.post('/webhook', async (req, res) => {
-  const signature = req.headers['x-bkash-signature'] as string;
-  
-  if (!bkash.verifyWebhookSignature(JSON.stringify(req.body), signature)) {
-    return res.status(401).send('Unauthorized');
-  }
-  
-  // Process webhook safely
-});
-
-// 3. Implement rate limiting for payment endpoints
-// 4. Always validate input data before processing
-// 5. Use HTTPS in production
-// 6. Log security events for monitoring
-```
-
-## 🧪 Testing & Development
-
-### Environment Setup
-
-```bash
-# 1. Clone and install dependencies
-git clone <repository-url>
-cd bkash-nagad-payment
-npm install
-
-# 2. Set up environment variables
-cp .env.example .env
-# Edit .env with your bKash credentials
-
-# 3. Run tests
-npm test
-npm run test:coverage
-
-# 4. Build the project
-npm run build
-
-# 5. Run examples
-npm run example:basic
-npm run example:express
-```
-
-### Mock Testing
-
-```typescript
-// For testing without actual bKash API calls
-const mockBkash = {
-  createPayment: jest.fn().mockResolvedValue({
-    paymentID: 'MOCK_PAYMENT_ID',
-    bkashURL: 'https://mock.bkash.url',
-    statusCode: '0000',
-    statusMessage: 'Successful'
-  }),
-  executePayment: jest.fn().mockResolvedValue({
-    transactionStatus: 'Completed',
-    trxID: 'MOCK_TRX_ID',
-    amount: '100.00'
-  })
-};
-
-// Use in your tests
-test('should create payment successfully', async () => {
-  const result = await mockBkash.createPayment(mockData);
-  expect(result.statusCode).toBe('0000');
-});
-```
-
-## 🎯 Key Features & Benefits
-
-### ✨ Production-Ready Features
-- **🔄 Automatic Retry Logic**: Built-in retry mechanisms for network failures
-- **⚡ Smart Token Management**: Automatic token caching, renewal, and refresh
-- **🛡️ Security First**: HMAC SHA256 webhook verification and secure API calls
-- **📊 Comprehensive Logging**: Winston-based logging with configurable levels
-- **🎯 Type Safety**: Full TypeScript support with Zod validation
-- **🔧 Flexible Configuration**: Extensive configuration options for all environments
-
-### 🚀 Developer Experience
-- **📚 Complete Documentation**: Detailed JSDoc comments and examples
-- **🧪 Test Coverage**: Comprehensive Jest test suite with 95%+ coverage
-- **📱 Ready-to-Use Examples**: Express.js integration and standalone examples
-- **🎭 Event-Driven**: Real-time event emissions for all payment lifecycle events
-- **🔍 Advanced Debugging**: Detailed error messages with context and retry information
-
-### 💡 Business Benefits
-- **💰 Multi-Refund Support**: Up to 10 partial refunds per transaction
-- **📈 Transaction Analytics**: Comprehensive transaction search and reporting
-- **🏢 Enterprise Ready**: Support for aggregators and system integrators
-- **🌍 Scalable Architecture**: Built for high-volume payment processing
-- **⚙️ Flexible Integration**: Works with any Node.js framework
 
 ## 📊 API Response Examples
 
@@ -810,7 +777,7 @@ test('should create payment successfully', async () => {
 
 ## 🔧 Migration Guide
 
-### From v1.x to v2.x
+### From v1.0.0 to v1.0.1
 
 ```typescript
 // OLD (v1.x) - Deprecated
@@ -902,7 +869,7 @@ const totalRefunded = refundStatus.refundTransactions
 
 ## 📝 Changelog
 
-### v2.1.0 (Latest)
+### v1.0.1 (Latest)
 - ✅ Enhanced refund system with v2 API support
 - ✅ Multiple partial refunds (up to 10 per transaction)
 - ✅ Comprehensive refund status tracking
@@ -910,15 +877,7 @@ const totalRefunded = refundStatus.refundTransactions
 - ✅ Improved error handling with detailed error codes
 - ✅ Complete TypeScript rewrite with strict typing
 
-### v2.0.0
-- ✅ Breaking: Upgraded to bKash API v1.2.0-beta
-- ✅ Breaking: Refund API v2 implementation
-- ✅ Event-driven architecture with EventEmitter
-- ✅ Automatic retry mechanisms
-- ✅ Enhanced logging with Winston
-- ✅ Zod schema validation
-
-### v1.x (Legacy)
+### v1.0.0
 - ✅ Basic payment creation and execution
 - ✅ Legacy refund support
 - ✅ Basic transaction search

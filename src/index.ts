@@ -1,5 +1,5 @@
 // Export bKash payment class
-export { BkashPayment as bKashJS } from './bkash';
+export { BkashPayment } from './bkash';
 
 // Export bKash types and interfaces
 export * from './types/types';
