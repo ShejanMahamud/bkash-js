@@ -6,25 +6,6 @@
 
 A Node.js/TypeScript library for bKash Checkout (URL Based) payment integration with advanced features including retry mechanisms, event handling, webhook support, and complete transaction lifecycle management.
 
-## ✨ Version 2.0 - Refactored with SOLID Principles
-
-This version has been completely refactored to follow SOLID principles for better maintainability, testability, and extensibility:
-
-- **Single Responsibility**: Each service handles one specific concern (payments, transactions, refunds, etc.)
-- **Open/Closed**: Easily extensible through dependency injection and interfaces
-- **Liskov Substitution**: All services implement well-defined interfaces
-- **Interface Segregation**: Focused interfaces for specific operations
-- **Dependency Inversion**: Services depend on abstractions, not concrete implementations
-
-### Key Improvements
-- **Modular Architecture**: Separated into focused services (TokenManager, PaymentService, TransactionService, RefundService, WebhookService)
-- **Dependency Injection**: All dependencies are injected, making testing and customization easier
-- **Service Factory**: Centralized service creation and dependency management
-- **Better Testability**: Each service can be tested in isolation with mock dependencies
-- **Backward Compatibility**: Existing API remains unchanged while new architecture provides better structure
-
-The refactored version is now the default export. Both versions maintain the same public API for seamless migration.
-
 ## 🚀 What This Package Covers
 
 ### Core Payment Features
@@ -128,7 +109,7 @@ const payment = await bkash.createPayment({
 
 // Execute payment after customer authorization
 const executed = await bkash.executePayment(payment.paymentID);
-
+```
 ## 🔧 Advanced Usage - Individual Services
 
 For advanced use cases, you can use individual services with dependency injection:
@@ -200,32 +181,6 @@ bkash.on('bkash:event', (event) => {
       break;
   }
 });
-```
-
-## ⚙️ Configuration Options
-
-```typescript
-interface BkashConfig {
-  // Required Authentication
-  username: string;           // bKash merchant username
-  password: string;           // bKash merchant password
-  appKey: string;            // bKash application key
-  appSecret: string;         // bKash application secret
-  
-  // Environment & Behavior
-  isSandbox?: boolean;       // Default: false (production)
-  timeout?: number;          // Request timeout in ms (default: 30000)
-  maxRetries?: number;       // Max retry attempts (default: 3)
-  retryDelay?: number;       // Delay between retries in ms (default: 1000)
-  log?: boolean;             // Enable detailed logging (default: false)
-  
-  // Advanced Webhook Configuration
-  webhook?: {
-    secret: string;          // Webhook signature verification secret
-    path?: string;           // Webhook endpoint path
-    onEvent?: (event: BkashEvent) => Promise<void>; // Custom event handler
-  };
-}
 ```
 
 ## 📚 API Documentation
@@ -423,7 +378,7 @@ const newToken = await bkash.refreshToken(existingRefreshToken);
 console.log('New Access Token:', newToken.id_token);
 ```
 
-### 🛡️ Webhook Integration & Security
+### Webhook Integration & Security
 
 #### `handleWebhook(payload: unknown, signature?: string)`
 Process webhook notifications with automatic signature verification.
@@ -472,7 +427,7 @@ const webhookEvent = bkash.createWebhookEvent('payment.success', {
 await bkash.handleWebhook(webhookEvent);
 ```
 
-## 📊 API Response Examples
+## API Response Examples
 
 ### Create Payment Response
 ```json
@@ -527,211 +482,7 @@ await bkash.handleWebhook(webhookEvent);
 }
 ```
 
-## 🏗️ Express.js Integration Example
-
-```typescript
-import express from 'express';
-import { BkashPayment, BkashError } from 'bkash-js';
-
-const app = express();
-app.use(express.json());
-
-// Initialize bKash with comprehensive configuration
-const bkash = new BkashPayment({
-  appKey: process.env.BKASH_APP_KEY!,
-  appSecret: process.env.BKASH_APP_SECRET!,
-  username: process.env.BKASH_USERNAME!,
-  password: process.env.BKASH_PASSWORD!,
-  isSandbox: process.env.NODE_ENV !== 'production',
-  log: process.env.NODE_ENV === 'development',
-  timeout: 30000,
-  maxRetries: 3,
-  webhook: {
-    secret: process.env.BKASH_WEBHOOK_SECRET!,
-    onEvent: async (event) => {
-      // Custom event handling logic
-      console.log('Received bKash event:', event.type);
-      // Save to database, send notifications, etc.
-    }
-  }
-});
-
-// Create payment endpoint
-app.post('/api/payment/create', async (req, res) => {
-  try {
-    const { amount, customerPhone, invoiceNumber } = req.body;
-
-    // Input validation
-    if (!amount || !customerPhone || !invoiceNumber) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required fields: amount, customerPhone, invoiceNumber'
-      });
-    }
-
-    const payment = await bkash.createPayment({
-      payerReference: customerPhone,
-      callbackURL: `${req.protocol}://${req.get('host')}/api/payment/callback`,
-      amount: amount.toString(),
-      currency: 'BDT',
-      intent: 'sale',
-      merchantInvoiceNumber: invoiceNumber,
-    });
-
-    res.json({
-      success: true,
-      data: {
-        paymentID: payment.paymentID,
-        checkoutURL: payment.bkashURL,
-        amount: payment.amount,
-        currency: payment.currency,
-        merchantInvoiceNumber: payment.merchantInvoiceNumber
-      }
-    });
-  } catch (error) {
-    console.error('Payment creation failed:', error);
-    
-    if (error instanceof BkashError) {
-      res.status(400).json({
-        success: false,
-        message: error.message,
-        code: error.code,
-        details: error.details
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: 'Internal server error'
-      });
-    }
-  }
-});
-
-// Payment callback endpoint (user returns from bKash)
-app.get('/api/payment/callback', async (req, res) => {
-  try {
-    const { paymentID, status } = req.query;
-
-    if (status === 'success' && paymentID) {
-      // Execute the payment
-      const result = await bkash.executePayment(paymentID as string);
-      
-      if (result.transactionStatus === 'Completed') {
-        // Payment successful - redirect to success page
-        res.redirect(`/payment-success?trxID=${result.trxID}&amount=${result.amount}`);
-      } else {
-        // Payment failed
-        res.redirect(`/payment-failed?reason=${result.statusMessage}`);
-      }
-    } else {
-      // Payment cancelled or failed
-      res.redirect('/payment-cancelled');
-    }
-  } catch (error) {
-    console.error('Payment callback error:', error);
-    res.redirect('/payment-error');
-  }
-});
-
-// Payment verification endpoint
-app.get('/api/payment/verify/:paymentID', async (req, res) => {
-  try {
-    const { paymentID } = req.params;
-    const status = await bkash.queryPayment(paymentID);
-
-    res.json({
-      success: true,
-      data: {
-        paymentID: status.paymentID,
-        transactionStatus: status.transactionStatus,
-        userVerificationStatus: status.userVerificationStatus,
-        amount: status.amount,
-        trxID: status.trxID,
-        paymentCreateTime: status.paymentCreateTime,
-        paymentExecuteTime: status.paymentExecuteTime
-      }
-    });
-  } catch (error) {
-    console.error('Payment verification failed:', error);
-    res.status(400).json({
-      success: false,
-      message: error instanceof BkashError ? error.message : 'Verification failed'
-    });
-  }
-});
-
-// Process refund endpoint
-app.post('/api/payment/refund', async (req, res) => {
-  try {
-    const { paymentId, trxId, refundAmount, sku, reason } = req.body;
-
-    const refund = await bkash.refundPayment({
-      paymentId,
-      trxId,
-      refundAmount: refundAmount.toString(),
-      sku,
-      reason
-    });
-
-    res.json({
-      success: true,
-      data: {
-        refundTrxId: refund.refundTrxId,
-        refundTransactionStatus: refund.refundTransactionStatus,
-        originalTrxAmount: refund.originalTrxAmount,
-        refundAmount: refund.refundAmount,
-        completedTime: refund.completedTime
-      }
-    });
-  } catch (error) {
-    console.error('Refund failed:', error);
-    res.status(400).json({
-      success: false,
-      message: error instanceof BkashError ? error.message : 'Refund failed'
-    });
-  }
-});
-
-// Webhook endpoint for bKash notifications
-app.post('/api/webhook/bkash', async (req, res) => {
-  try {
-    const signature = req.headers['x-bkash-signature'] as string;
-    
-    // Process webhook with automatic signature verification
-    await bkash.handleWebhook(req.body, signature);
-    
-    res.status(200).send('OK');
-  } catch (error) {
-    console.error('Webhook processing failed:', error);
-    res.status(400).send('Bad Request');
-  }
-});
-
-// Transaction search endpoint
-app.get('/api/transaction/:trxID', async (req, res) => {
-  try {
-    const { trxID } = req.params;
-    const transaction = await bkash.searchTransaction({ trxID });
-
-    res.json({
-      success: true,
-      data: transaction
-    });
-  } catch (error) {
-    console.error('Transaction search failed:', error);
-    res.status(404).json({
-      success: false,
-      message: 'Transaction not found'
-    });
-  }
-});
-
-app.listen(3000, () => {
-  console.log('bKash integration server running on port 3000');
-});
-```
-
-## 🚨 Error Handling
+## Error Handling
 
 ```typescript
 import { BkashError } from 'bkash-js';
@@ -769,181 +520,6 @@ try {
 }
 ```
 
-## 📊 API Response Examples
-
-### Create Payment Response
-```json
-{
-  "paymentID": "TR0001xt7mXxG1718274354990",
-  "paymentCreateTime": "2024-06-13T12:32:35:033 GMT+0600",
-  "transactionStatus": "Initiated",
-  "amount": "100.50",
-  "currency": "BDT",
-  "intent": "sale",
-  "merchantInvoiceNumber": "INV-1718274354990",
-  "bkashURL": "https://checkout.sandbox.bka.sh/v1.2.0-beta/checkout/payment/create/TR0001xt7mXxG1718274354990",
-  "callbackURL": "https://yoursite.com/callback",
-  "successCallbackURL": "https://checkout.sandbox.bka.sh/v1.2.0-beta/checkout/payment/callback/success/TR0001xt7mXxG1718274354990",
-  "failureCallbackURL": "https://checkout.sandbox.bka.sh/v1.2.0-beta/checkout/payment/callback/failure/TR0001xt7mXxG1718274354990",
-  "cancelledCallbackURL": "https://checkout.sandbox.bka.sh/v1.2.0-beta/checkout/payment/callback/cancel/TR0001xt7mXxG1718274354990",
-  "statusCode": "0000",
-  "statusMessage": "Successful"
-}
-```
-
-### Execute Payment Response
-```json
-{
-  "paymentID": "TR0001xt7mXxG1718274354990",
-  "statusCode": "0000",
-  "statusMessage": "Successful",
-  "customerMsisdn": "01712345678",
-  "payerReference": "01712345678",
-  "paymentExecuteTime": "2024-06-13T12:35:42:127 GMT+0600",
-  "trxID": "BFD90JRLST",
-  "transactionStatus": "Completed",
-  "amount": "100.50",
-  "currency": "BDT",
-  "intent": "sale",
-  "merchantInvoiceNumber": "INV-1718274354990"
-}
-```
-
-### Refund Response
-```json
-{
-  "originalTrxId": "BFD90JRLST",
-  "refundTrxId": "BFE91KSMTU",
-  "refundTransactionStatus": "Completed",
-  "originalTrxAmount": "100.50",
-  "refundAmount": "50.25",
-  "currency": "BDT",
-  "completedTime": "2024-06-13T13:15:28:456 GMT+0600",
-  "sku": "PRODUCT-SKU-001",
-  "reason": "Customer requested partial refund"
-}
-```
-
-## 🔧 Migration Guide
-
-### From v1.0.0 to v1.0.1
-
-```typescript
-// OLD (v1.x) - Deprecated
-const refund = await bkash.refundPaymentLegacy({
-  paymentId: 'payment_id',
-  transactionId: 'transaction_id', // Old field name
-  amount: 100, // Number format
-  reason: 'Refund'
-});
-
-// NEW (v2.x) - Recommended
-const refund = await bkash.refundPayment({
-  paymentId: 'payment_id',
-  trxId: 'transaction_id', // New field name
-  refundAmount: '100.00', // String format with decimals
-  sku: 'PRODUCT-001', // Required SKU
-  reason: 'Customer requested refund' // More descriptive
-});
-```
-
-### Breaking Changes
-- Refund API upgraded to v2 with new fields (`sku` required)
-- Transaction search uses `trxID` instead of `transactionId`
-- Amount fields are now strings instead of numbers
-- Enhanced error responses with more detailed information
-
-## 🏆 Common Use Cases
-
-### E-commerce Integration
-```typescript
-// 1. Customer clicks "Pay with bKash"
-const payment = await bkash.createPayment({
-  payerReference: customer.phone,
-  amount: order.total.toString(),
-  merchantInvoiceNumber: order.id,
-  callbackURL: `${baseURL}/payment/callback`
-});
-
-// 2. Redirect customer to payment.bkashURL
-// 3. Customer completes payment in bKash app
-// 4. Handle callback and execute payment
-
-const result = await bkash.executePayment(payment.paymentID);
-if (result.transactionStatus === 'Completed') {
-  // Update order status, send confirmation email
-  await updateOrderStatus(order.id, 'paid', result.trxID);
-}
-```
-
-### Subscription Billing
-```typescript
-// Monthly subscription charge
-const payment = await bkash.createPayment({
-  payerReference: subscription.customerPhone,
-  amount: subscription.monthlyAmount,
-  merchantInvoiceNumber: `SUB-${subscription.id}-${month}`,
-  callbackURL: `${baseURL}/subscription/callback`
-});
-
-// Handle successful payment
-bkash.on('bkash:event', async (event) => {
-  if (event.type === 'payment.success') {
-    await extendSubscription(subscription.id, event.data.trxID);
-  }
-});
-```
-
-### Marketplace Refunds
-```typescript
-// Process marketplace refund
-const refund = await bkash.refundPayment({
-  paymentId: order.paymentId,
-  trxId: order.transactionId,
-  refundAmount: refundRequest.amount.toString(),
-  sku: order.items.map(i => i.sku).join(','),
-  reason: `Return requested: ${refundRequest.reason}`
-});
-
-// Check all refunds for an order
-const refundStatus = await bkash.checkRefundStatus({
-  paymentId: order.paymentId,
-  trxId: order.transactionId
-});
-
-const totalRefunded = refundStatus.refundTransactions
-  .filter(r => r.refundTransactionStatus === 'Completed')
-  .reduce((sum, r) => sum + parseFloat(r.refundAmount), 0);
-```
-
-## 📝 Changelog
-
-### v2.0.0 (Latest) - SOLID Refactoring
-- ✨ **Complete refactoring following SOLID principles**
-- 🏗️ **Modular architecture**: Separated into focused services (TokenManager, PaymentService, TransactionService, RefundService, WebhookService)
-- 🔧 **Dependency injection**: All services use dependency injection for better testability
-- 🎯 **Single responsibility**: Each service handles one specific concern
-- 🔌 **Interface-based design**: Services implement well-defined interfaces
-- 🏭 **Service factory pattern**: Centralized service creation and management
-- 📦 **Better maintainability**: Reduced original 1500+ line file into focused, testable services
-- 🔄 **Backward compatibility**: Existing API remains unchanged
-- ⚡ **Improved testability**: Each service can be tested in isolation
-- 🧪 **Updated test suite**: Tests refactored to work with new service-based architecture
-
-### v1.0.1
-- ✅ Enhanced refund system with v2 API support
-- ✅ Multiple partial refunds (up to 10 per transaction)
-- ✅ Comprehensive refund status tracking
-- ✅ Advanced webhook security with HMAC verification
-- ✅ Improved error handling with detailed error codes
-- ✅ Complete TypeScript rewrite with strict typing
-
-### v1.0.0
-- ✅ Basic payment creation and execution
-- ✅ Legacy refund support
-- ✅ Basic transaction search
-- ✅ Simple error handling
-
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
@@ -951,7 +527,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ### Development Setup
 ```bash
 # Fork and clone the repository
-git clone https://github.com/yourusername/bkash-js.git
+git clone https://github.com/ShejanMahamud/bkash-js.git
 cd bkash-js
 
 # Install dependencies
