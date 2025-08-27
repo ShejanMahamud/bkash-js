@@ -6,6 +6,25 @@
 
 A Node.js/TypeScript library for bKash Checkout (URL Based) payment integration with advanced features including retry mechanisms, event handling, webhook support, and complete transaction lifecycle management.
 
+## ✨ Version 2.0 - Refactored with SOLID Principles
+
+This version has been completely refactored to follow SOLID principles for better maintainability, testability, and extensibility:
+
+- **Single Responsibility**: Each service handles one specific concern (payments, transactions, refunds, etc.)
+- **Open/Closed**: Easily extensible through dependency injection and interfaces
+- **Liskov Substitution**: All services implement well-defined interfaces
+- **Interface Segregation**: Focused interfaces for specific operations
+- **Dependency Inversion**: Services depend on abstractions, not concrete implementations
+
+### Key Improvements
+- **Modular Architecture**: Separated into focused services (TokenManager, PaymentService, TransactionService, RefundService, WebhookService)
+- **Dependency Injection**: All dependencies are injected, making testing and customization easier
+- **Service Factory**: Centralized service creation and dependency management
+- **Better Testability**: Each service can be tested in isolation with mock dependencies
+- **Backward Compatibility**: Existing API remains unchanged while new architecture provides better structure
+
+The refactored version is now the default export. Both versions maintain the same public API for seamless migration.
+
 ## 🚀 What This Package Covers
 
 ### Core Payment Features
@@ -80,7 +99,7 @@ interface BkashConfig {
 ## ⚡ Quick Start
 
 ```typescript
-import { BkashPayment } from 'bkash-js';
+import { BkashPayment } from 'bkash-js'; // Uses the refactored SOLID architecture
 
 const bkash = new BkashPayment({
   appKey: 'your_app_key',
@@ -109,6 +128,36 @@ const payment = await bkash.createPayment({
 
 // Execute payment after customer authorization
 const executed = await bkash.executePayment(payment.paymentID);
+
+## 🔧 Advanced Usage - Individual Services
+
+For advanced use cases, you can use individual services with dependency injection:
+
+```typescript
+import { 
+  BkashServiceFactory, 
+  PaymentService, 
+  TokenManager,
+  IPaymentService,
+  ITokenManager 
+} from 'bkash-js';
+
+// Create service factory
+const factory = new BkashServiceFactory(config);
+
+// Use individual services
+const tokenManager: ITokenManager = factory.getTokenManager();
+const paymentService: IPaymentService = factory.getPaymentService();
+
+// Direct service usage
+const token = await tokenManager.getToken();
+const payment = await paymentService.createPayment(paymentData);
+
+// Custom implementations (for testing or customization)
+class CustomTokenManager implements ITokenManager {
+  // Your custom implementation
+}
+```
 
 ## 🎯 Event-Driven Architecture
 
@@ -869,7 +918,19 @@ const totalRefunded = refundStatus.refundTransactions
 
 ## 📝 Changelog
 
-### v1.0.1 (Latest)
+### v2.0.0 (Latest) - SOLID Refactoring
+- ✨ **Complete refactoring following SOLID principles**
+- 🏗️ **Modular architecture**: Separated into focused services (TokenManager, PaymentService, TransactionService, RefundService, WebhookService)
+- 🔧 **Dependency injection**: All services use dependency injection for better testability
+- 🎯 **Single responsibility**: Each service handles one specific concern
+- 🔌 **Interface-based design**: Services implement well-defined interfaces
+- 🏭 **Service factory pattern**: Centralized service creation and management
+- 📦 **Better maintainability**: Reduced original 1500+ line file into focused, testable services
+- 🔄 **Backward compatibility**: Existing API remains unchanged
+- ⚡ **Improved testability**: Each service can be tested in isolation
+- 🧪 **Updated test suite**: Tests refactored to work with new service-based architecture
+
+### v1.0.1
 - ✅ Enhanced refund system with v2 API support
 - ✅ Multiple partial refunds (up to 10 per transaction)
 - ✅ Comprehensive refund status tracking
